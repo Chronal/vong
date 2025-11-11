@@ -51,6 +51,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-#
-# Output binary
-vong
+
+# Build dir
+build
+
+# clangd
+.cache
+
+# ctags
+TAGS
