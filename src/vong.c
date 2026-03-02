@@ -1,12 +1,8 @@
 #include "vong.h"
+#include "draw.h"
 #include "state.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_gamepad.h>
-#include <SDL3/SDL_log.h>
-#include <SDL3/SDL_rect.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL_main.h>
 
@@ -70,39 +66,12 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 	SDL_Renderer* renderer = state->renderer;
 
 	Uint64 current_tick = SDL_GetTicks();
-
 	Uint64 ticks_elapsed = current_tick - state->game.last_update;
 
-	if (ticks_elapsed > 10) {
-		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-		SDL_RenderClear(renderer);
+	state->game.last_update = current_tick;
+	vong_step(&state->game, ticks_elapsed);
 
-		SDL_SetRenderDrawColor(renderer, 0x0, 0x0, 0x0, SDL_ALPHA_OPAQUE);
-
-		const SDL_FRect screen_bounds = state->game.bounds;
-		SDL_RenderFillRect(renderer, &screen_bounds);
-
-		state->game.last_update = current_tick;
-
-		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-
-		ball* b = &state->game.b;
-		const SDL_FRect ball = {
-			.w = b->radius, .h = b->radius, .x = b->pos.x, .y = b->pos.y};
-
-		if (!SDL_RenderFillRect(renderer, &ball)) {
-			SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", SDL_GetError());
-		}
-
-		vong_step(&state->game, ticks_elapsed);
-		SDL_Log("Ball position x: %g y: %g", state->game.b.pos.x,
-		        state->game.b.pos.y);
-
-		/* SDL_Log("Ball velocity x: %g y: %g", state->game.b.velocity.x, */
-		/* state->game.b.velocity.y); */
-
-		SDL_RenderPresent(renderer);
-	}
+	draw_vong(state);
 
 	return SDL_APP_CONTINUE;
 }
@@ -146,5 +115,3 @@ SDL_AppResult handle_keypress(app_state* state, SDL_Event* event) {
 		return SDL_APP_CONTINUE;
 	}
 }
-
-SDL_AppResult handle_keyrelease(app_state* state, SDL_Event* event) {}
