@@ -34,7 +34,7 @@ vec2d vec2d_scale(vec2d* v, double scalar) {
 }
 
 vec2d vec2d_rand_dir() {
-	double angle = (double)SDL_randf();
+	float angle = 2 * SDL_PI_F * SDL_randf();
 	vec2d v = {.x = SDL_cosf(angle), .y = SDL_sinf(angle)};
 	return v;
 }

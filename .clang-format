@@ -1,3 +1,4 @@
+Language: C
 BasedOnStyle: LLVM
 UseTab: AlignWithSpaces
 TabWidth: 4

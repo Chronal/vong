@@ -4,6 +4,9 @@
 #include "vec2d.h"
 #include <SDL3/SDL.h>
 
+#define LOGICAL_WIDTH (2000)
+#define LOGICAL_HEIGHT (1000)
+
 #define PADDLE_W (0.1)
 #define PADDLE_H (0.3)
 #define PADDLE_SPEED (0.1)
@@ -11,9 +14,9 @@
 #define LEFT_PADDLE_INIT_POS {PADDLE_W, 0.5 - PADDLE_H / 2.0};
 #define RIGHT_PADDLE_INIT_POS {1.0 - 2 * PADDLE_W, 0.5 - PADDLE_H / 2.0};
 
-#define BALL_W (0.05)
-#define BALL_H (0.05)
-#define BALL_INIT_SPEED (0.2)
+#define BALL_W (100.0)
+#define BALL_H (100.0)
+#define BALL_INIT_SPEED (350.0)
 #define BALL_INIT_POS {0.5 - BALL_W / 2, 0.5 - BALL_W / 2}
 
 typedef struct ball ball;
@@ -35,6 +38,7 @@ struct game_state {
 	ball b;
 	paddle left_paddle;
 	paddle right_paddle;
+	SDL_FRect bounds;
 };
 
 typedef struct {
@@ -43,9 +47,9 @@ typedef struct {
 	game_state game;
 } app_state;
 
-void vong_init(game_state* state);
+void vong_init(game_state* state, SDL_FRect bounds);
 bool vong_check_win(game_state* state, int* winner_id);
 void vong_reset(game_state* state);
-void vong_step(game_state* state);
+void vong_step(game_state* state, Uint64 tick_delta);
 
 #endif /* GAME_STATE_H */

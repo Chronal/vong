@@ -1,6 +1,12 @@
 #include "vong.h"
+#include "state.h"
 
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_video.h>
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL_main.h>
 
@@ -28,23 +34,29 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc,
 		return SDL_APP_FAILURE;
 	}
 
-	int mode_count;
-	SDL_DisplayMode** display_modes =
-		SDL_GetFullscreenDisplayModes(primary_display, &mode_count);
-
-	SDL_DisplayMode* display_mode = display_modes[0];
+	const SDL_DisplayMode* display_mode =
+		SDL_GetCurrentDisplayMode(primary_display);
 
 	if (!SDL_CreateWindowAndRenderer("Vong", display_mode->w, display_mode->h,
-	                                 SDL_WINDOW_FULLSCREEN |
-	                                     SDL_WINDOW_MAXIMIZED,
-	                                 &as->window, &as->renderer)) {
-
+	                                 0, &as->window, &as->renderer)) {
 		SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", SDL_GetError());
 		return SDL_APP_FAILURE;
 	}
 
-	SDL_free(display_modes);
-	vong_init(&(as->game));
+	if (!SDL_SetRenderLogicalPresentation(as->renderer, LOGICAL_WIDTH,
+	                                      LOGICAL_HEIGHT,
+	                                      SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER,
+		             "Failed to set up logical presentation");
+	}
+
+	SDL_FRect screen_bounds;
+	if (!SDL_GetRenderLogicalPresentationRect(as->renderer, &screen_bounds)) {
+		SDL_LogError(SDL_LOG_CATEGORY_RENDER,
+		             "Failed to get logical presentation rectangle");
+	}
+
+	vong_init(&(as->game), screen_bounds);
 
 	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
 	            "Finished initialising application");
@@ -61,22 +73,18 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 
 	Uint64 ticks_elapsed = current_tick - state->game.last_update;
 
-	if (ticks_elapsed >= 200) {
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	if (ticks_elapsed > 10) {
+		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
+
+		SDL_SetRenderDrawColor(renderer, 0x0, 0x0, 0x0, SDL_ALPHA_OPAQUE);
+
+		const SDL_FRect screen_bounds = state->game.bounds;
+		SDL_RenderFillRect(renderer, &screen_bounds);
 
 		state->game.last_update = current_tick;
 
-		int out_width;
-		int out_height;
-		SDL_SetRenderLogicalPresentation(
-			renderer, 1000, 1000, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
-
-		SDL_GetRenderOutputSize(state->renderer, &out_width, &out_height);
-
-		double ratio = (double)out_width / out_height;
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, SDL_ALPHA_OPAQUE);
-		SDL_SetRenderScale(renderer, 1000, 1000);
 
 		ball* b = &state->game.b;
 		const SDL_FRect ball = {
@@ -86,7 +94,12 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 			SDL_LogError(SDL_LOG_CATEGORY_RENDER, "%s", SDL_GetError());
 		}
 
-		ball_step(b, ticks_elapsed);
+		vong_step(&state->game, ticks_elapsed);
+		SDL_Log("Ball position x: %g y: %g", state->game.b.pos.x,
+		        state->game.b.pos.y);
+
+		/* SDL_Log("Ball velocity x: %g y: %g", state->game.b.velocity.x, */
+		/* state->game.b.velocity.y); */
 
 		SDL_RenderPresent(renderer);
 	}
@@ -133,6 +146,5 @@ SDL_AppResult handle_keypress(app_state* state, SDL_Event* event) {
 		return SDL_APP_CONTINUE;
 	}
 }
-SDL_AppResult handle_keyrelease(app_state* state, SDL_Event* event) {
 
-};
+SDL_AppResult handle_keyrelease(app_state* state, SDL_Event* event) {}
