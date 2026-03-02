@@ -100,10 +100,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 	case SDL_EVENT_QUIT:
 		return SDL_APP_SUCCESS;
 	case SDL_EVENT_KEY_DOWN:
-		SDL_Log("Scacode %s DOWN", SDL_GetScancodeName(event->key.scancode));
+		SDL_Log("Scancode %s DOWN", SDL_GetScancodeName(event->key.scancode));
 		return handle_keypress((app_state*)appstate, event);
 	case SDL_EVENT_KEY_UP:
-		SDL_Log("Scacode %s UP", SDL_GetScancodeName(event->key.scancode));
+		SDL_Log("Scancode %s UP", SDL_GetScancodeName(event->key.scancode));
 	default:
 		return SDL_APP_CONTINUE;
 	}
